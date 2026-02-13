@@ -1,0 +1,1136 @@
+{
+	"info": {
+		"_postman_id": "sims-complete-api-collection",
+		"name": "SIMS Complete API Collection - All Endpoints",
+		"description": "Complete Student Information Management System API endpoints for comprehensive testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Public Endpoints",
+			"item": [
+				{
+					"name": "API Connection Test",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/test",
+							"host": ["{{base_url}}"],
+							"path": ["test"]
+						}
+					}
+				},
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"testuser@sims.com\",\n    \"password\": \"password123\",\n    \"role\": \"student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": ["{{base_url}}"],
+							"path": ["register"]
+						}
+					}
+				},
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('auth_token', response.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@sims.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						}
+					}
+				},
+				{
+					"name": "Login Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('auth_token', response.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"student@sims.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						}
+					}
+				},
+				{
+					"name": "Login Instructor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('auth_token', response.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"instructor@sims.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Authenticated Endpoints",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": ["{{base_url}}"],
+							"path": ["profile"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Admin Endpoints",
+			"item": [
+				{
+					"name": "Admin Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Students CRUD",
+					"item": [
+						{
+							"name": "Get All Students",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/students",
+									"host": ["{{base_url}}"],
+									"path": ["students"]
+								}
+							}
+						},
+						{
+							"name": "Create Student",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"New Student\",\n    \"email\": \"newstudent@sims.com\",\n    \"department_id\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/students",
+									"host": ["{{base_url}}"],
+									"path": ["students"]
+								}
+							}
+						},
+						{
+							"name": "Get Single Student",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/students/1",
+									"host": ["{{base_url}}"],
+									"path": ["students", "1"]
+								}
+							}
+						},
+						{
+							"name": "Update Student",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Updated Student\",\n    \"email\": \"updatedstudent@sims.com\",\n    \"department_id\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/students/1",
+									"host": ["{{base_url}}"],
+									"path": ["students", "1"]
+								}
+							}
+						},
+						{
+							"name": "Delete Student",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/students/1",
+									"host": ["{{base_url}}"],
+									"path": ["students", "1"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Instructors CRUD",
+					"item": [
+						{
+							"name": "Get All Instructors",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/instructors",
+									"host": ["{{base_url}}"],
+									"path": ["instructors"]
+								}
+							}
+						},
+						{
+							"name": "Create Instructor",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"New Instructor\",\n    \"email\": \"newinstructor@sims.com\",\n    \"department_id\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/instructors",
+									"host": ["{{base_url}}"],
+									"path": ["instructors"]
+								}
+							}
+						},
+						{
+							"name": "Get Single Instructor",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/instructors/1",
+									"host": ["{{base_url}}"],
+									"path": ["instructors", "1"]
+								}
+							}
+						},
+						{
+							"name": "Update Instructor",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Updated Instructor\",\n    \"email\": \"updatedinstructor@sims.com\",\n    \"department_id\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/instructors/1",
+									"host": ["{{base_url}}"],
+									"path": ["instructors", "1"]
+								}
+							}
+						},
+						{
+							"name": "Delete Instructor",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/instructors/1",
+									"host": ["{{base_url}}"],
+									"path": ["instructors", "1"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Courses CRUD",
+					"item": [
+						{
+							"name": "Get All Courses",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/courses",
+									"host": ["{{base_url}}"],
+									"path": ["courses"]
+								}
+							}
+						},
+						{
+							"name": "Create Course",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"New Course\",\n    \"code\": \"NC101\",\n    \"description\": \"New course description\",\n    \"department_id\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/courses",
+									"host": ["{{base_url}}"],
+									"path": ["courses"]
+								}
+							}
+						},
+						{
+							"name": "Get Single Course",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/courses/1",
+									"host": ["{{base_url}}"],
+									"path": ["courses", "1"]
+								}
+							}
+						},
+						{
+							"name": "Update Course",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"Updated Course\",\n    \"code\": \"UC101\",\n    \"description\": \"Updated description\",\n    \"department_id\": 1\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/courses/1",
+									"host": ["{{base_url}}"],
+									"path": ["courses", "1"]
+								}
+							}
+						},
+						{
+							"name": "Delete Course",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/courses/1",
+									"host": ["{{base_url}}"],
+									"path": ["courses", "1"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Settings CRUD",
+					"item": [
+						{
+							"name": "Get All Settings",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/settings",
+									"host": ["{{base_url}}"],
+									"path": ["settings"]
+								}
+							}
+						},
+						{
+							"name": "Create Setting",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"key\": \"app_name\",\n    \"value\": \"SIMS Application\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/settings",
+									"host": ["{{base_url}}"],
+									"path": ["settings"]
+								}
+							}
+						},
+						{
+							"name": "Get Single Setting",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/settings/1",
+									"host": ["{{base_url}}"],
+									"path": ["settings", "1"]
+								}
+							}
+						},
+						{
+							"name": "Update Setting",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"key\": \"app_name\",\n    \"value\": \"Updated SIMS App\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/settings/1",
+									"host": ["{{base_url}}"],
+									"path": ["settings", "1"]
+								}
+							}
+						},
+						{
+							"name": "Delete Setting",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/settings/1",
+									"host": ["{{base_url}}"],
+									"path": ["settings", "1"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Reports",
+					"item": [
+						{
+							"name": "Student Enrollment Report",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/reports/student-enrollment",
+									"host": ["{{base_url}}"],
+									"path": ["reports", "student-enrollment"]
+								}
+							}
+						},
+						{
+							"name": "Course Assignments Report",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/reports/course-assignments",
+									"host": ["{{base_url}}"],
+									"path": ["reports", "course-assignments"]
+								}
+							}
+						},
+						{
+							"name": "Department Summary Report",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/reports/department-summary",
+									"host": ["{{base_url}}"],
+									"path": ["reports", "department-summary"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "4. Student Endpoints",
+			"item": [
+				{
+					"name": "Student Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/student/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["student", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Enroll in Course",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"student_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/courses/1/enroll",
+							"host": ["{{base_url}}"],
+							"path": ["courses", "1", "enroll"]
+						}
+					}
+				},
+				{
+					"name": "View Student Schedule",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/students/1/schedule",
+							"host": ["{{base_url}}"],
+							"path": ["students", "1", "schedule"]
+						}
+					}
+				},
+				{
+					"name": "View Student Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/students/1/profile",
+							"host": ["{{base_url}}"],
+							"path": ["students", "1", "profile"]
+						}
+					}
+				},
+				{
+					"name": "View Student Grades",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/students/1/grades",
+							"host": ["{{base_url}}"],
+							"path": ["students", "1", "grades"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Instructor Endpoints",
+			"item": [
+				{
+					"name": "Instructor Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/instructor/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["instructor", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Get Instructor Courses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/instructors/1/courses",
+							"host": ["{{base_url}}"],
+							"path": ["instructors", "1", "courses"]
+						}
+					}
+				},
+				{
+					"name": "Grades CRUD",
+					"item": [
+						{
+							"name": "Get All Grades",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/grades",
+									"host": ["{{base_url}}"],
+									"path": ["grades"]
+								}
+							}
+						},
+						{
+							"name": "Create Grade",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": 1,\n    \"course_id\": 1,\n    \"instructor_id\": 1,\n    \"grade\": \"A\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/grades",
+									"host": ["{{base_url}}"],
+									"path": ["grades"]
+								}
+							}
+						},
+						{
+							"name": "Update Grade",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": 1,\n    \"course_id\": 1,\n    \"instructor_id\": 1,\n    \"grade\": \"A+\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/grades/1",
+									"host": ["{{base_url}}"],
+									"path": ["grades", "1"]
+								}
+							}
+						},
+						{
+							"name": "Delete Grade",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/grades/1",
+									"host": ["{{base_url}}"],
+									"path": ["grades", "1"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "Attendance CRUD",
+					"item": [
+						{
+							"name": "Get All Attendance",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/attendance",
+									"host": ["{{base_url}}"],
+									"path": ["attendance"]
+								}
+							}
+						},
+						{
+							"name": "Create Attendance",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": 1,\n    \"course_id\": 1,\n    \"instructor_id\": 1,\n    \"date\": \"2026-01-31\",\n    \"status\": \"present\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/attendance",
+									"host": ["{{base_url}}"],
+									"path": ["attendance"]
+								}
+							}
+						},
+						{
+							"name": "Update Attendance",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"student_id\": 1,\n    \"course_id\": 1,\n    \"instructor_id\": 1,\n    \"date\": \"2026-01-31\",\n    \"status\": \"late\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/attendance/1",
+									"host": ["{{base_url}}"],
+									"path": ["attendance", "1"]
+								}
+							}
+						},
+						{
+							"name": "Delete Attendance",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{auth_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/attendance/1",
+									"host": ["{{base_url}}"],
+									"path": ["attendance", "1"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "6. Department Endpoints",
+			"item": [
+				{
+					"name": "Approve Enrollment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/courses/1/students/1/approve",
+							"host": ["{{base_url}}"],
+							"path": ["courses", "1", "students", "1", "approve"]
+						}
+					}
+				},
+				{
+					"name": "Reject Enrollment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/courses/1/students/1/reject",
+							"host": ["{{base_url}}"],
+							"path": ["courses", "1", "students", "1", "reject"]
+						}
+					}
+				},
+				{
+					"name": "Pending Enrollments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/courses/1/pending-enrollments",
+							"host": ["{{base_url}}"],
+							"path": ["courses", "1", "pending-enrollments"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Error Testing",
+			"item": [
+				{
+					"name": "Unauthorized Access (No Token)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Invalid Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid-token-here"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": ["{{base_url}}"],
+							"path": ["profile"]
+						}
+					}
+				},
+				{
+					"name": "Role Violation (Student->Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["admin", "dashboard"]
+						}
+					}
+				},
+				{
+					"name": "Validation Error (Missing Fields)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Incomplete Student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/students",
+							"host": ["{{base_url}}"],
+							"path": ["students"]
+						}
+					}
+				}
+			]
+		}
+	]
+}
