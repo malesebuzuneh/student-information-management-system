@@ -4,106 +4,53 @@ import React, { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/utils/authGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Table from '@/components/ui/Table';
-import { FileText, TrendingUp, Award } from 'lucide-react';
+import { FileText, TrendingUp, Award, BarChart3 } from 'lucide-react';
+import api from '@/services/api';
 
 const StudentGradesPage = () => {
   const [grades, setGrades] = useState([]);
+  const [gpa, setGpa] = useState(0);
+  const [totalCredits, setTotalCredits] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [selectedSemester, setSelectedSemester] = useState('current');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchGrades();
-  }, [selectedSemester]);
+  }, []);
 
   const fetchGrades = async () => {
     try {
       setLoading(true);
-      // Mock data for now
-      const mockGrades = [
-        {
-          id: 1,
-          courseCode: 'CS101',
-          courseName: 'Introduction to Programming',
-          assignment: 'Midterm Exam',
-          grade: 'A',
-          points: 95,
-          maxPoints: 100,
-          weight: '30%',
-          date: '2024-01-15',
-        },
-        {
-          id: 2,
-          courseCode: 'CS101',
-          courseName: 'Introduction to Programming',
-          assignment: 'Assignment 1',
-          grade: 'A-',
-          points: 88,
-          maxPoints: 100,
-          weight: '15%',
-          date: '2024-01-10',
-        },
-        {
-          id: 3,
-          courseCode: 'MATH201',
-          courseName: 'Calculus II',
-          assignment: 'Quiz 1',
-          grade: 'B+',
-          points: 87,
-          maxPoints: 100,
-          weight: '10%',
-          date: '2024-01-12',
-        },
-        {
-          id: 4,
-          courseCode: 'PHYS101',
-          courseName: 'Physics I',
-          assignment: 'Lab Report 1',
-          grade: 'A',
-          points: 92,
-          maxPoints: 100,
-          weight: '20%',
-          date: '2024-01-08',
-        },
-      ];
-      
-      setGrades(mockGrades);
+      const response = await api.get('/student/grades');
+      setGrades(response.data.grades || []);
+      setGpa(response.data.gpa || 0);
+      setTotalCredits(response.data.total_credits || 0);
     } catch (error) {
       console.error('Error fetching grades:', error);
+      setError('Failed to load grades');
     } finally {
       setLoading(false);
     }
   };
 
   const getGradeColor = (grade) => {
-    const gradeColors = {
-      'A': 'text-green-600 bg-green-100',
-      'A-': 'text-green-600 bg-green-100',
-      'B+': 'text-blue-600 bg-blue-100',
-      'B': 'text-blue-600 bg-blue-100',
-      'B-': 'text-blue-600 bg-blue-100',
-      'C+': 'text-yellow-600 bg-yellow-100',
-      'C': 'text-yellow-600 bg-yellow-100',
-      'C-': 'text-yellow-600 bg-yellow-100',
-      'D': 'text-orange-600 bg-orange-100',
-      'F': 'text-red-600 bg-red-100',
-    };
-    return gradeColors[grade] || 'text-gray-600 bg-gray-100';
+    if (['A+', 'A', 'A-'].includes(grade)) return 'text-green-600 bg-green-100';
+    if (['B+', 'B', 'B-'].includes(grade)) return 'text-blue-600 bg-blue-100';
+    if (['C+', 'C', 'C-'].includes(grade)) return 'text-yellow-600 bg-yellow-100';
+    if (['D+', 'D'].includes(grade)) return 'text-orange-600 bg-orange-100';
+    return 'text-red-600 bg-red-100';
   };
 
   const columns = [
     {
       header: 'Course',
-      accessor: 'courseCode',
+      accessor: 'course',
       render: (value, row) => (
         <div>
-          <div className="font-medium text-gray-900">{value}</div>
-          <div className="text-sm text-gray-600">{row.courseName}</div>
+          <div className="font-medium text-gray-900">{row.course?.code || 'N/A'}</div>
+          <div className="text-sm text-gray-600">{row.course?.title || 'N/A'}</div>
         </div>
       ),
-    },
-    {
-      header: 'Assignment',
-      accessor: 'assignment',
     },
     {
       header: 'Grade',
@@ -115,67 +62,71 @@ const StudentGradesPage = () => {
       ),
     },
     {
-      header: 'Points',
-      accessor: 'points',
-      render: (value, row) => `${value}/${row.maxPoints}`,
+      header: 'Assignment Type',
+      accessor: 'assignment_type',
+      render: (value) => value ? value.charAt(0).toUpperCase() + value.slice(1) : 'N/A',
     },
     {
-      header: 'Weight',
-      accessor: 'weight',
+      header: 'Assignment Name',
+      accessor: 'assignment_name',
+      render: (value) => value || 'N/A',
+    },
+    {
+      header: 'Points',
+      accessor: 'points_earned',
+      render: (value, row) => row.points_earned && row.total_points ? `${row.points_earned}/${row.total_points}` : 'N/A',
     },
     {
       header: 'Date',
-      accessor: 'date',
-      render: (value, row) => new Date(value).toLocaleDateString(),
+      accessor: 'created_at',
+      render: (value) => value ? new Date(value).toLocaleDateString() : 'N/A',
     },
   ];
-
-  const calculateGPA = () => {
-    const gradePoints = {
-      'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-      'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D': 1.0, 'F': 0.0
-    };
-    
-    const courseGrades = {};
-    grades.forEach(grade => {
-      if (!courseGrades[grade.courseCode]) {
-        courseGrades[grade.courseCode] = [];
-      }
-      courseGrades[grade.courseCode].push(grade);
-    });
-
-    let totalPoints = 0;
-    let totalCourses = 0;
-    
-    Object.values(courseGrades).forEach(courseGradeList => {
-      const avgGrade = courseGradeList.reduce((sum, g) => sum + (gradePoints[g.grade] || 0), 0) / courseGradeList.length;
-      totalPoints += avgGrade;
-      totalCourses++;
-    });
-
-    return totalCourses > 0 ? (totalPoints / totalCourses).toFixed(2) : '0.00';
-  };
 
   const stats = [
     {
       title: 'Current GPA',
-      value: calculateGPA(),
+      value: gpa.toFixed(2),
       icon: Award,
       color: 'bg-green-500',
     },
     {
-      title: 'Assignments Graded',
+      title: 'Grades Received',
       value: grades.length,
       icon: FileText,
       color: 'bg-blue-500',
     },
     {
-      title: 'Average Score',
-      value: grades.length > 0 ? Math.round(grades.reduce((sum, g) => sum + g.points, 0) / grades.length) + '%' : '0%',
+      title: 'Total Credits',
+      value: totalCredits,
       icon: TrendingUp,
       color: 'bg-purple-500',
     },
   ];
+
+  if (loading) {
+    return (
+      <ProtectedRoute allowedRoles={['student']}>
+        <DashboardLayout>
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg text-gray-600">Loading grades...</div>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (error) {
+    return (
+      <ProtectedRoute allowedRoles={['student']}>
+        <DashboardLayout>
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg text-red-600">{error}</div>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute allowedRoles={['student']}>
@@ -186,15 +137,6 @@ const StudentGradesPage = () => {
               <h1 className="text-2xl font-bold text-gray-900">My Grades</h1>
               <p className="text-gray-600">View your academic performance</p>
             </div>
-            <select
-              value={selectedSemester}
-              onChange={(e) => setSelectedSemester(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="current">Current Semester</option>
-              <option value="fall2023">Fall 2023</option>
-              <option value="spring2023">Spring 2023</option>
-            </select>
           </div>
 
           {/* Stats Cards */}
@@ -223,19 +165,20 @@ const StudentGradesPage = () => {
               <h2 className="text-lg font-medium text-gray-900">Grade Details</h2>
             </div>
             
-            <Table
-              columns={columns}
-              data={grades}
-              loading={loading}
-            />
-          </div>
-
-          {/* Grade Distribution Chart Placeholder */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Grade Distribution</h3>
-            <div className="flex items-center justify-center h-48 bg-gray-50 rounded-lg">
-              <p className="text-gray-500">Grade distribution chart would go here</p>
-            </div>
+            {grades.length > 0 ? (
+              <Table
+                columns={columns}
+                data={grades}
+                loading={false}
+              />
+            ) : (
+              <div className="p-12 text-center">
+                <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Grades Yet</h3>
+                <p className="text-gray-600">You don't have any grades recorded yet.</p>
+                <p className="text-sm text-gray-500 mt-2">Grades will appear here once your instructors enter them.</p>
+              </div>
+            )}
           </div>
         </div>
       </DashboardLayout>

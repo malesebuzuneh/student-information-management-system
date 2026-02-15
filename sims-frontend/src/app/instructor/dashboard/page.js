@@ -200,27 +200,35 @@ const InstructorDashboard = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Pending Tasks</h3>
               <div className="space-y-3">
-                {pending_tasks.map((task, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 text-sm">{task.task}</p>
-                        <p className="text-xs text-gray-600">{task.course}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Due: {new Date(task.due_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="ml-2">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                          {task.priority}
-                        </span>
-                        {task.count && (
-                          <p className="text-xs text-gray-600 mt-1 text-center">{task.count} items</p>
-                        )}
+                {pending_tasks && pending_tasks.length > 0 ? (
+                  pending_tasks.map((task, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 text-sm">{task.task}</p>
+                          <p className="text-xs text-gray-600">{task.course}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Due: {new Date(task.due_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="ml-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </span>
+                          {task.count && (
+                            <p className="text-xs text-gray-600 mt-1 text-center">{task.count} items</p>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No pending tasks</p>
+                    <p className="text-sm text-gray-500">You're all caught up!</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -231,26 +239,34 @@ const InstructorDashboard = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Upcoming Classes</h3>
               <div className="space-y-3">
-                {upcoming_classes.map((class_item, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-white" />
+                {upcoming_classes && upcoming_classes.length > 0 ? (
+                  upcoming_classes.map((class_item, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{class_item.course}</p>
+                        <p className="text-sm text-gray-600">
+                          {class_item.time} • {class_item.room}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(class_item.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">{class_item.students_enrolled}</p>
+                        <p className="text-xs text-gray-600">students</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{class_item.course}</p>
-                      <p className="text-sm text-gray-600">
-                        {class_item.time} • {class_item.room}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(class_item.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">{class_item.students_enrolled}</p>
-                      <p className="text-xs text-gray-600">students</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No upcoming classes</p>
+                    <p className="text-sm text-gray-500">Your schedule is clear</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 

@@ -45,26 +45,22 @@ const StudentProfilePage = () => {
   const fetchStudentProfile = async () => {
     try {
       setLoading(true);
-      // Get current user's student profile
-      const response = await api.get('/profile');
-      const userData = response.data;
+      // Get student profile using student-specific endpoint
+      const response = await api.get('/student/profile');
+      const student = response.data;
       
-      if (userData.role === 'student' && userData.student) {
-        const studentResponse = await api.get(`/students/${userData.student.id}`);
-        const student = studentResponse.data;
-        setStudentData(student);
-        
-        // Initialize form with student data
-        setFormData({
-          name: student.name || '',
-          email: student.email || '',
-          phone: student.phone || '',
-          address: student.address || '',
-          date_of_birth: student.date_of_birth || '',
-          emergency_contact: student.emergency_contact || '',
-          emergency_phone: student.emergency_phone || '',
-        });
-      }
+      setStudentData(student);
+      
+      // Initialize form with student data
+      setFormData({
+        name: student.name || '',
+        email: student.email || '',
+        phone: student.phone || '',
+        address: student.address || '',
+        date_of_birth: student.date_of_birth || '',
+        emergency_contact: student.emergency_contact || '',
+        emergency_phone: student.emergency_phone || '',
+      });
     } catch (error) {
       console.error('Error fetching student profile:', error);
       showNotification('Failed to load profile data', 'error');
@@ -84,7 +80,8 @@ const StudentProfilePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/students/${studentData.id}`, formData);
+      // Use student-specific update endpoint
+      await api.put('/student/profile', formData);
       showNotification('Profile updated successfully');
       setIsEditing(false);
       fetchStudentProfile(); // Refresh data

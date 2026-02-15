@@ -212,9 +212,14 @@ class DepartmentController extends Controller
 
     public function index() 
     { 
-        return Department::withCount(['students', 'instructors', 'courses'])
+        $departments = Department::withCount(['students', 'instructors', 'courses'])
                         ->with(['students', 'instructors', 'courses'])
-                        ->get(); 
+                        ->get();
+                        
+        return response()->json([
+            'data' => $departments,
+            'message' => 'Departments retrieved successfully'
+        ]);
     }
 
     public function store(Request $request) 
@@ -243,9 +248,12 @@ class DepartmentController extends Controller
             'status' => $request->status ?? 'active'
         ]);
 
+        // No automatic department head account creation
+        // Admin will assign department heads manually from existing instructors
+
         return response()->json([
             'department' => $department->loadCount(['students', 'instructors', 'courses']),
-            'message' => 'Department created successfully'
+            'message' => 'Department created successfully. You can now assign a department head from existing instructors.'
         ]);
     }
 
@@ -339,40 +347,48 @@ class DepartmentController extends Controller
     // Get department statistics
     public function getDepartmentStats()
     {
-        $stats = [
-            'total_departments' => Department::count(),
-            'active_departments' => Department::where('status', 'active')->count(),
-            'inactive_departments' => Department::where('status', 'inactive')->count(),
-            'departments_with_students' => Department::whereHas('students')->count(),
-            'departments_with_instructors' => Department::whereHas('instructors')->count(),
-            'departments_with_courses' => Department::whereHas('courses')->count(),
-            'total_students_across_departments' => Student::count(),
-            'total_instructors_across_departments' => Instructor::count(),
-            'total_courses_across_departments' => Course::count(),
-            'average_students_per_department' => Department::withCount('students')->avg('students_count'),
-            'average_instructors_per_department' => Department::withCount('instructors')->avg('instructors_count'),
-            'average_courses_per_department' => Department::withCount('courses')->avg('courses_count'),
-        ];
+        try {
+            $totalDepartments = Department::count();
+            $activeDepartments = Department::where('status', 'active')->count();
+            $inactiveDepartments = Department::where('status', 'inactive')->count();
+            
+            $stats = [
+                'total_departments' => $totalDepartments,
+                'active_departments' => $activeDepartments,
+                'inactive_departments' => $inactiveDepartments,
+                'departments_with_students' => Department::whereHas('students')->count(),
+                'departments_with_instructors' => Department::whereHas('instructors')->count(),
+                'departments_with_courses' => Department::whereHas('courses')->count(),
+                'total_students_across_departments' => Student::count(),
+                'total_instructors_across_departments' => Instructor::count(),
+                'total_courses_across_departments' => Course::count(),
+            ];
 
-        // Department breakdown
-        $departmentBreakdown = Department::withCount(['students', 'instructors', 'courses'])
-                                        ->get()
-                                        ->map(function ($dept) {
-                                            return [
-                                                'name' => $dept->name,
-                                                'code' => $dept->code,
-                                                'students' => $dept->students_count,
-                                                'instructors' => $dept->instructors_count,
-                                                'courses' => $dept->courses_count,
-                                                'status' => $dept->status
-                                            ];
-                                        });
+            // Department breakdown
+            $departmentBreakdown = Department::withCount(['students', 'instructors', 'courses'])
+                                            ->get()
+                                            ->map(function ($dept) {
+                                                return [
+                                                    'name' => $dept->name,
+                                                    'code' => $dept->code,
+                                                    'students' => $dept->students_count,
+                                                    'instructors' => $dept->instructors_count,
+                                                    'courses' => $dept->courses_count,
+                                                    'status' => $dept->status
+                                                ];
+                                            });
 
-        return response()->json([
-            'stats' => $stats,
-            'department_breakdown' => $departmentBreakdown,
-            'message' => 'Department statistics retrieved successfully'
-        ]);
+            return response()->json([
+                'stats' => $stats,
+                'department_breakdown' => $departmentBreakdown,
+                'message' => 'Department statistics retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to retrieve department statistics',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Assign head of department
@@ -731,7 +747,10 @@ class DepartmentController extends Controller
     {
         $course = Course::where('department_id', $deptId)->findOrFail($courseId);
         $course->update($request->all());
-        return $course;
+        return response()->json([
+            'course' => $course,
+            'message' => 'Course updated successfully'
+        ]);
     }
 }
 

@@ -12,7 +12,12 @@ class InstructorController extends Controller
 {
     public function index()
     {
-        return Instructor::with(['department', 'user'])->get();
+        $instructors = Instructor::with(['department', 'user'])->get();
+        
+        return response()->json([
+            'data' => $instructors,
+            'message' => 'Instructors retrieved successfully'
+        ]);
     }
 
     public function store(Request $request)
@@ -23,7 +28,8 @@ class InstructorController extends Controller
             'phone' => 'nullable|string|max:20',
             'department_id' => 'required|exists:departments,id',
             'qualification' => 'nullable|string',
-            'status' => 'nullable|in:active,inactive,archived'
+            'specialization' => 'nullable|string',
+            'status' => 'nullable|in:active,inactive,on_leave'
         ]);
 
         // Generate a temporary password for the instructor
@@ -65,7 +71,6 @@ class InstructorController extends Controller
             'department_id' => $request->department_id,
             'qualification' => $request->qualification,
             'status' => $request->status ?? 'active',
-            'is_first_login' => true,
             'user_id' => $user->id
         ]);
 
@@ -84,7 +89,11 @@ class InstructorController extends Controller
 
     public function show($id)
     {
-        return Instructor::with(['department', 'user'])->findOrFail($id);
+        $instructor = Instructor::with(['department', 'user'])->findOrFail($id);
+        return response()->json([
+            'instructor' => $instructor,
+            'message' => 'Instructor details retrieved successfully'
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -142,7 +151,11 @@ class InstructorController extends Controller
     public function assignedCourses($id)
     {
         $instructor = Instructor::with('courses')->findOrFail($id);
-        return $instructor->courses;
+        return response()->json([
+            'courses' => $instructor->courses,
+            'instructor' => $instructor,
+            'message' => 'Instructor courses retrieved successfully'
+        ]);
     }
 
     // Instructor Dashboard
@@ -195,41 +208,9 @@ class InstructorController extends Controller
                 'average_attendance' => $this->calculateAverageAttendance($assignedCourses->pluck('id'))
             ];
 
-            // Get upcoming classes (mock data for now)
-            $upcomingClasses = [
-                [
-                    'course' => 'CS101 - Introduction to Programming',
-                    'time' => '09:00 AM',
-                    'room' => 'Room 205',
-                    'date' => now()->addDays(1)->toDateString(),
-                    'students_enrolled' => 25
-                ],
-                [
-                    'course' => 'CS201 - Data Structures',
-                    'time' => '02:00 PM', 
-                    'room' => 'Room 301',
-                    'date' => now()->addDays(1)->toDateString(),
-                    'students_enrolled' => 30
-                ]
-            ];
-
-            // Get pending tasks
-            $pendingTasks = [
-                [
-                    'task' => 'Grade Assignment 2 submissions',
-                    'course' => 'CS101',
-                    'due_date' => now()->addDays(2)->toDateString(),
-                    'priority' => 'high',
-                    'count' => 25
-                ],
-                [
-                    'task' => 'Update attendance for last week',
-                    'course' => 'CS201',
-                    'due_date' => now()->addDays(1)->toDateString(),
-                    'priority' => 'medium',
-                    'count' => 3
-                ]
-            ];
+            // No mock data - return empty arrays if no real data exists
+            $upcomingClasses = [];
+            $pendingTasks = [];
 
             // Get course performance summary
             $coursePerformance = [];
@@ -379,8 +360,6 @@ class InstructorController extends Controller
             'password' => Hash::make($newPassword),
             'is_first_login' => true, // Force password change on next login
         ]);
-
-        $instructor->update(['is_first_login' => true]);
 
         return response()->json([
             'message' => 'Password reset successfully',

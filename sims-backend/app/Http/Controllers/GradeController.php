@@ -210,14 +210,14 @@ class GradeController extends Controller
         }
 
         $grades = Grade::where('student_id', $user->student->id)
-                      ->finalized() // Only show finalized grades
-                      ->with(['course', 'instructor', 'finalizedBy'])
+                      ->finalized() // Only show finalized grades (returns all in simple structure)
+                      ->with(['course', 'instructor'])
                       ->get();
 
         return response()->json([
-            'grades' => $grades,
+            'data' => $grades,
             'student' => $user->student,
-            'message' => 'Final grades retrieved successfully'
+            'message' => 'Student grades retrieved successfully'
         ]);
     }
 

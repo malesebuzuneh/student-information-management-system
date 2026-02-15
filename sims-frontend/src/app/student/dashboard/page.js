@@ -187,29 +187,37 @@ const StudentDashboard = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Upcoming Deadlines</h3>
               <div className="space-y-3">
-                {upcoming_deadlines.map((deadline, index) => {
-                  const daysLeft = getDaysUntilDeadline(deadline.due_date);
-                  return (
-                    <div key={index} className="border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900 text-sm">{deadline.title}</p>
-                          <p className="text-xs text-gray-600">{deadline.course}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(deadline.due_date).toLocaleDateString()}
-                          </p>
+                {upcoming_deadlines && upcoming_deadlines.length > 0 ? (
+                  upcoming_deadlines.map((deadline, index) => {
+                    const daysLeft = getDaysUntilDeadline(deadline.due_date);
+                    return (
+                      <div key={index} className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900 text-sm">{deadline.title}</p>
+                            <p className="text-xs text-gray-600">{deadline.course}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(deadline.due_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            daysLeft <= 1 ? 'bg-red-100 text-red-800' :
+                            daysLeft <= 3 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {daysLeft <= 0 ? 'Due' : `${daysLeft}d left`}
+                          </span>
                         </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          daysLeft <= 1 ? 'bg-red-100 text-red-800' :
-                          daysLeft <= 3 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {daysLeft <= 0 ? 'Due' : `${daysLeft}d left`}
-                        </span>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No upcoming deadlines</p>
+                    <p className="text-sm text-gray-500">You're all caught up!</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -248,20 +256,28 @@ const StudentDashboard = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Announcements</h3>
               <div className="space-y-3">
-                {announcements.map((announcement, index) => (
-                  <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900 text-sm">{announcement.title}</p>
-                        <p className="text-sm text-gray-600 mt-1">{announcement.message}</p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {announcement.course} • {new Date(announcement.date).toLocaleDateString()}
-                        </p>
+                {announcements && announcements.length > 0 ? (
+                  announcements.map((announcement, index) => (
+                    <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 text-sm">{announcement.title}</p>
+                          <p className="text-sm text-gray-600 mt-1">{announcement.message}</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {announcement.course} • {new Date(announcement.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Bell className="h-4 w-4 text-blue-500 mt-1" />
                       </div>
-                      <Bell className="h-4 w-4 text-blue-500 mt-1" />
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No announcements</p>
+                    <p className="text-sm text-gray-500">Check back later for updates</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

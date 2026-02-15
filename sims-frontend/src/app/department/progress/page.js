@@ -23,58 +23,35 @@ const ProgressPage = () => {
   const fetchStudentProgress = async () => {
     try {
       setLoading(true);
-      // Mock data for student progress since we don't have the endpoint yet
-      const mockProgress = [
-        {
-          id: 1,
-          student: { id: 1, name: 'John Doe', email: 'john@student.com' },
-          course: { id: 2, code: 'CS101', title: 'Introduction to Programming' },
-          enrollmentDate: '2026-01-15',
-          attendance: 85,
-          assignments: { completed: 8, total: 10 },
-          grades: { current: 87, letter: 'B+' },
-          status: 'active',
-          lastActivity: '2026-02-01'
-        },
-        {
-          id: 2,
-          student: { id: 2, name: 'Jane Smith', email: 'jane@student.com' },
-          course: { id: 3, code: 'CS201', title: 'Data Structures' },
-          enrollmentDate: '2026-01-15',
-          attendance: 92,
-          assignments: { completed: 9, total: 10 },
-          grades: { current: 94, letter: 'A' },
-          status: 'active',
-          lastActivity: '2026-02-02'
-        },
-        {
-          id: 3,
-          student: { id: 3, name: 'Bob Johnson', email: 'bob@student.com' },
-          course: { id: 2, code: 'CS101', title: 'Introduction to Programming' },
-          enrollmentDate: '2026-01-20',
-          attendance: 78,
-          assignments: { completed: 6, total: 10 },
-          grades: { current: 72, letter: 'C+' },
-          status: 'at-risk',
-          lastActivity: '2026-01-30'
-        },
-        {
-          id: 4,
-          student: { id: 4, name: 'Alice Brown', email: 'alice@student.com' },
-          course: { id: 3, code: 'CS201', title: 'Data Structures' },
-          enrollmentDate: '2026-01-18',
-          attendance: 96,
-          assignments: { completed: 10, total: 10 },
-          grades: { current: 98, letter: 'A+' },
-          status: 'excellent',
-          lastActivity: '2026-02-02'
-        },
-      ];
+      // Fetch real student data from department
+      const response = await api.get('/department/students');
+      const studentsData = response.data.students || response.data || [];
       
-      setStudents(mockProgress);
+      // Transform student data to include progress information
+      const progressData = studentsData.map(student => ({
+        id: student.id,
+        student: {
+          id: student.id,
+          name: student.name,
+          email: student.email
+        },
+        course: {
+          id: 0,
+          code: 'N/A',
+          title: 'Not enrolled'
+        },
+        enrollmentDate: student.admission_date || student.created_at,
+        attendance: 0,
+        assignments: { completed: 0, total: 0 },
+        grades: { current: 0, letter: 'N/A' },
+        status: student.status || 'active',
+        lastActivity: student.updated_at || student.created_at
+      }));
+      
+      setStudents(progressData);
     } catch (error) {
       console.error('Error fetching student progress:', error);
-      alert('Failed to fetch student progress');
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -133,7 +110,9 @@ const ProgressPage = () => {
     totalStudents: students.length,
     activeStudents: students.filter(s => s.status === 'active' || s.status === 'excellent').length,
     atRiskStudents: students.filter(s => s.status === 'at-risk').length,
-    averageGrade: students.reduce((sum, s) => sum + s.grades.current, 0) / students.length || 0,
+    averageGrade: students.length > 0 
+      ? (students.reduce((sum, s) => sum + (s.grades.current || 0), 0) / students.length)
+      : 0,
   };
 
   const columns = [
@@ -327,6 +306,11 @@ const ProgressPage = () => {
               columns={columns}
               data={filteredStudents}
               loading={loading}
+              emptyMessage={
+                students.length === 0 
+                  ? "No students found in your department. Students will appear here once they are added by the admin."
+                  : "No students match your search criteria."
+              }
             />
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ProtectedRoute } from '@/utils/authGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Table from '@/components/ui/Table';
@@ -10,7 +11,10 @@ import Modal from '@/components/ui/Modal';
 import { Plus, Search, Edit, Award, BookOpen, Users } from 'lucide-react';
 import api from '@/services/api';
 
-const InstructorGradesPage = () => {
+const InstructorGradesContent = () => {
+  const searchParams = useSearchParams();
+  const courseParam = searchParams.get('course');
+  
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [students, setStudents] = useState([]);
@@ -46,6 +50,16 @@ const InstructorGradesPage = () => {
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  // Auto-select course if provided in URL
+  useEffect(() => {
+    if (courseParam && courses.length > 0) {
+      const course = courses.find(c => c.id.toString() === courseParam);
+      if (course) {
+        fetchCourseStudents(course.id);
+      }
+    }
+  }, [courseParam, courses]);
 
   const fetchCourses = async () => {
     try {
@@ -214,20 +228,14 @@ const InstructorGradesPage = () => {
 
   if (loading) {
     return (
-      <ProtectedRoute allowedRoles={['instructor']}>
-        <DashboardLayout>
-          <div className="flex justify-center items-center h-64">
-            <div className="text-lg text-gray-600">Loading courses...</div>
-          </div>
-        </DashboardLayout>
-      </ProtectedRoute>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg text-gray-600">Loading courses...</div>
+      </div>
     );
   }
 
   return (
-    <ProtectedRoute allowedRoles={['instructor']}>
-      <DashboardLayout>
-        <div className="space-y-6">
+    <div className="space-y-6">
           {/* Notification */}
           {notification && (
             <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
@@ -426,6 +434,20 @@ const InstructorGradesPage = () => {
             </form>
           </Modal>
         </div>
+  );
+};
+
+const InstructorGradesPage = () => {
+  return (
+    <ProtectedRoute allowedRoles={['instructor']}>
+      <DashboardLayout>
+        <Suspense fallback={
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg text-gray-600">Loading...</div>
+          </div>
+        }>
+          <InstructorGradesContent />
+        </Suspense>
       </DashboardLayout>
     </ProtectedRoute>
   );

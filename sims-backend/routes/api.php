@@ -20,17 +20,15 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     // Profile
     Route::get('/profile', function () {
-        return request()->user();
+        return request()->user()->load(['student.department', 'instructor.department']);
     });
     
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // Admin-only routes (Course creation, user management, system-wide access)
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
-        
-        // Course management - ADMIN ONLY
-        Route::apiResource('courses', CourseController::class);
         
         // Student management - ADMIN ONLY  
         Route::apiResource('students', StudentController::class);
@@ -57,19 +55,36 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/student-enrollment', [ReportController::class, 'studentEnrollment']);
         Route::get('/reports/course-assignments', [ReportController::class, 'courseAssignments']);
         Route::get('/reports/department-summary', [ReportController::class, 'departmentSummary']);
+        Route::get('/reports/system-analytics', [ReportController::class, 'systemAnalytics']);
+        Route::get('/reports/student/{studentId}/transcript', [ReportController::class, 'studentTranscript']);
+        Route::get('/reports/course/{courseId}/performance', [ReportController::class, 'coursePerformance']);
+        Route::get('/reports/department/{departmentId}/performance', [ReportController::class, 'departmentPerformance']);
+        Route::get('/reports/instructor/{instructorId}/performance', [ReportController::class, 'instructorPerformance']);
         
         // Grade finalization - ADMIN FINALIZES GRADES (Step 7)
         Route::get('/admin/pending-grades', [GradeController::class, 'adminPendingGrades']);
         Route::put('/admin/grades/{gradeId}/finalize', [GradeController::class, 'adminFinalize']);
     });
 
+    // Course Management Routes - Admin and Department can create/manage
+    Route::middleware('role:admin,department')->group(function () {
+        Route::apiResource('courses', CourseController::class);
+        Route::post('/courses/{id}/assign-instructor', [CourseController::class, 'assignInstructor']);
+        Route::delete('/courses/{courseId}/instructors/{instructorId}', [CourseController::class, 'removeInstructor']);
+        Route::post('/courses/{id}/enroll-student', [CourseController::class, 'enrollStudent']);
+    });
+    
+    // Course Viewing - All authenticated users
+    Route::get('/courses', [CourseController::class, 'index']);
+    Route::get('/courses/{id}', [CourseController::class, 'show']);
+
     // Department Routes (Department Head access)
     Route::middleware('role:department')->group(function () {
         Route::get('/department/dashboard', [DepartmentController::class, 'dashboard']);
         Route::get('/department/pending-enrollments', [DepartmentController::class, 'allPendingEnrollments']);
         Route::get('/department/courses', [DepartmentController::class, 'courses']);
-        // REMOVED: Course creation - only admin can create courses
-        // Route::post('/department/courses', [DepartmentController::class, 'addCourse']);
+        // Department heads can create courses for their department
+        Route::post('/department/courses', [DepartmentController::class, 'addCourse']);
         Route::get('/department/instructors', [DepartmentController::class, 'getDepartmentInstructors']);
         Route::get('/department/students', [DepartmentController::class, 'getDepartmentStudents']);
         
@@ -84,10 +99,8 @@ Route::middleware('auth:sanctum')->group(function () {
             [DepartmentController::class, 'pendingEnrollments']
         );
         
-        // Instructor assignment
-        Route::post('/courses/{courseId}/assign-instructor',
-            [DepartmentController::class, 'assignInstructor']
-        );
+        // Instructor assignment - REMOVED DUPLICATE ROUTE
+        // Use the general /courses/{id}/assign-instructor endpoint instead
         Route::delete('/courses/{courseId}/instructors/{instructorId}',
             [DepartmentController::class, 'removeInstructor']
         );
@@ -95,19 +108,29 @@ Route::middleware('auth:sanctum')->group(function () {
         // Grade approval - Department heads approve grades (Step 6)
         Route::get('/department/pending-grades', [GradeController::class, 'departmentPendingGrades']);
         Route::put('/department/grades/{gradeId}/approve', [GradeController::class, 'departmentApprove']);
+        
+        // Attendance statistics
+        Route::get('/department/attendance/stats', [AttendanceController::class, 'departmentStats']);
     });
 
     // Student Routes
     Route::middleware('role:student')->group(function () {
         Route::get('/student/dashboard', [StudentController::class, 'dashboard']);
         
+        // Profile management
+        Route::get('/student/profile', [StudentController::class, 'myProfile']);
+        Route::put('/student/profile', [StudentController::class, 'updateMyProfile']);
+        
         // Course registration (Step 3)
-        Route::get('/student/available-courses', [StudentController::class, 'availableCourses']);
+        Route::get('/student/available-courses', [CourseController::class, 'availableCourses']);
         Route::post('/student/enroll/{courseId}', [StudentController::class, 'requestEnrollment']);
         Route::get('/student/enrolled-courses', [StudentController::class, 'enrolledCourses']);
         
         // View final grades (Step 8)
         Route::get('/student/grades', [GradeController::class, 'studentGrades']);
+        
+        // View attendance
+        Route::get('/student/attendance', [AttendanceController::class, 'studentAttendance']);
         
         Route::get('/students/{id}/profile', [StudentController::class, 'viewProfile']);
         Route::get('/students/{id}/grades', [StudentController::class, 'viewGrades']);
@@ -130,6 +153,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Attendance management
         Route::post('/instructor/attendance', [AttendanceController::class, 'store']);
+        Route::post('/instructor/attendance/bulk', [AttendanceController::class, 'bulkStore']);
         Route::put('/instructor/attendance/{attendanceId}', [AttendanceController::class, 'update']);
         Route::get('/instructor/courses/{courseId}/attendance', [AttendanceController::class, 'courseAttendance']);
     });

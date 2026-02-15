@@ -19,3 +19,46 @@ Thumbs.db
 
 # Documentation working files
 *.tmp.md
+
+# Backend (Laravel) specific
+sims-backend/vendor/
+sims-backend/node_modules/
+sims-backend/.env
+sims-backend/.env.backup
+sims-backend/.phpunit.result.cache
+sims-backend/Homestead.json
+sims-backend/Homestead.yaml
+sims-backend/npm-debug.log
+sims-backend/yarn-error.log
+sims-backend/storage/*.key
+sims-backend/storage/logs/*.log
+sims-backend/storage/framework/cache/data/*
+sims-backend/storage/framework/sessions/*
+sims-backend/storage/framework/testing/*
+sims-backend/storage/framework/views/*
+sims-backend/bootstrap/cache/*.php
+
+# Frontend (Next.js) specific
+sims-frontend/node_modules/
+sims-frontend/.next/
+sims-frontend/out/
+sims-frontend/build/
+sims-frontend/.env
+sims-frontend/.env.local
+sims-frontend/.env.development.local
+sims-frontend/.env.test.local
+sims-frontend/.env.production.local
+sims-frontend/.vercel
+sims-frontend/npm-debug.log*
+sims-frontend/yarn-debug.log*
+sims-frontend/yarn-error.log*
+
+# Database
+*.sqlite
+*.sqlite3
+sims-backend/database/database.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

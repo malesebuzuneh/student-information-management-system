@@ -26,7 +26,6 @@ class Student extends Model
         'admission_type',
         'admission_date',
         'status',
-        'is_first_login',
         'last_login',
         'user_id',
     ];
@@ -35,7 +34,6 @@ class Student extends Model
         'date_of_birth' => 'date',
         'admission_date' => 'date',
         'last_login' => 'datetime',
-        'is_first_login' => 'boolean',
     ];
 
     // Student belongs to a User (for authentication)
@@ -73,13 +71,11 @@ class Student extends Model
     {
         $year = $year ?: date('y'); // Current year in 2-digit format
         
-        // If no department code provided, use UGR as default
-        if (!$departmentCode) {
-            $departmentCode = 'UGR';
-        }
+        // Always use UGR as the prefix for all students
+        $prefix = 'UGR';
         
-        // Get the last student ID for this department and year
-        $lastStudent = self::where('student_id', 'like', "{$departmentCode}/%/{$year}")
+        // Get the last student ID for this year (regardless of department)
+        $lastStudent = self::where('student_id', 'like', "{$prefix}/%/{$year}")
                           ->orderBy('student_id', 'desc')
                           ->first();
         
@@ -92,19 +88,19 @@ class Student extends Model
             $sequence = 50001;
         }
         
-        return "{$departmentCode}/" . str_pad($sequence, 5, '0', STR_PAD_LEFT) . "/{$year}";
+        return "{$prefix}/" . str_pad($sequence, 5, '0', STR_PAD_LEFT) . "/{$year}";
     }
 
     // Check if student needs to change password on first login
     public function needsPasswordChange()
     {
-        return $this->is_first_login || ($this->user && $this->user->is_first_login);
+        return $this->user && $this->user->is_first_login;
     }
 
     // Mark first login as completed
     public function completeFirstLogin()
     {
-        $this->update(['is_first_login' => false, 'last_login' => now()]);
+        $this->update(['last_login' => now()]);
         if ($this->user) {
             $this->user->update(['is_first_login' => false, 'last_login' => now()]);
         }

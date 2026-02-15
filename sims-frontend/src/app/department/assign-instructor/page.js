@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ProtectedRoute } from '@/utils/authGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Table from '@/components/ui/Table';
@@ -17,67 +17,90 @@ const AssignInstructorPage = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedInstructor, setSelectedInstructor] = useState('');
+  const [notification, setNotification] = useState(null);
+
+  // Memoized functions to prevent unnecessary re-renders
+  const fetchCourses = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/department/courses');
+      const coursesData = response.data.courses || response.data || [];
+      setCourses(Array.isArray(coursesData) ? coursesData : []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      setCourses([]);
+      setNotification({ message: 'Failed to fetch courses', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchInstructors = useCallback(async () => {
+    try {
+      const response = await api.get('/department/instructors');
+      const instructorsData = response.data.instructors || response.data || [];
+      setInstructors(Array.isArray(instructorsData) ? instructorsData : []);
+    } catch (error) {
+      console.error('Error fetching instructors:', error);
+      setInstructors([]);
+    }
+  }, []);
 
   useEffect(() => {
     fetchCourses();
     fetchInstructors();
-  }, []);
+  }, [fetchCourses, fetchInstructors]);
 
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      // Use department-specific endpoint
-      const response = await api.get('/department/courses');
-      setCourses(response.data.courses || response.data || []);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      alert('Failed to fetch courses');
-    } finally {
-      setLoading(false);
+  // Auto-hide notification
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 5000);
+      return () => clearTimeout(timer);
     }
-  };
-
-  const fetchInstructors = async () => {
-    try {
-      const response = await api.get('/instructors');
-      setInstructors(response.data.data || response.data || []);
-    } catch (error) {
-      console.error('Error fetching instructors:', error);
-      alert('Failed to fetch instructors');
-    }
-  };
+  }, [notification]);
 
   const handleAssignInstructor = async (e) => {
     e.preventDefault();
+    if (!selectedCourse || !selectedInstructor) return;
+
     try {
-      // This would typically be a custom endpoint for assigning instructors
-      // For now, we'll simulate the assignment
-      alert('Instructor assigned successfully');
-      setShowAssignModal(false);
-      setSelectedCourse(null);
-      setSelectedInstructor('');
+      await api.post(`/courses/${selectedCourse.id}/assign-instructor`, {
+        instructor_id: parseInt(selectedInstructor)
+      });
+      setNotification({ message: 'Instructor assigned successfully', type: 'success' });
+      closeModal();
       fetchCourses();
     } catch (error) {
       console.error('Error assigning instructor:', error);
-      alert('Failed to assign instructor');
+      setNotification({ 
+        message: error.response?.data?.message || 'Failed to assign instructor', 
+        type: 'error' 
+      });
     }
   };
 
   const handleUnassignInstructor = async (course, instructor) => {
+    if (!course || !instructor) return;
+    
     if (window.confirm(`Are you sure you want to unassign ${instructor.name} from ${course.title}?`)) {
       try {
-        // This would typically be a custom endpoint for unassigning instructors
-        alert('Instructor unassigned successfully');
+        await api.delete(`/courses/${course.id}/instructors/${instructor.id}`);
+        setNotification({ message: 'Instructor unassigned successfully', type: 'success' });
         fetchCourses();
       } catch (error) {
         console.error('Error unassigning instructor:', error);
-        alert('Failed to unassign instructor');
+        setNotification({ 
+          message: error.response?.data?.message || 'Failed to unassign instructor', 
+          type: 'error' 
+        });
       }
     }
   };
 
   const openAssignModal = (course) => {
+    if (!course) return;
     setSelectedCourse(course);
+    setSelectedInstructor('');
     setShowAssignModal(true);
   };
 
@@ -87,19 +110,23 @@ const AssignInstructorPage = () => {
     setSelectedInstructor('');
   };
 
-  const filteredCourses = courses.filter(course =>
-    course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.code?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Memoized filtered courses to prevent unnecessary recalculations
+  const filteredCourses = React.useMemo(() => {
+    if (!Array.isArray(courses)) return [];
+    return courses.filter(course =>
+      course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course?.code?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [courses, searchTerm]);
 
-  const columns = [
+  const columns = React.useMemo(() => [
     {
       header: 'Course',
       accessor: 'code',
       render: (value, row) => (
         <div>
-          <div className="font-medium text-gray-900">{value} - {row.title}</div>
-          <div className="text-sm text-gray-600">{row.description}</div>
+          <div className="font-medium text-gray-900">{value || 'N/A'} - {row?.title || 'N/A'}</div>
+          <div className="text-sm text-gray-600">{row?.description || 'No description'}</div>
         </div>
       ),
     },
@@ -108,13 +135,14 @@ const AssignInstructorPage = () => {
       accessor: 'instructors',
       render: (value, row) => (
         <div className="space-y-1">
-          {row.instructors && row.instructors.length > 0 ? (
+          {row?.instructors && Array.isArray(row.instructors) && row.instructors.length > 0 ? (
             row.instructors.map((instructor) => (
-              <div key={instructor.id} className="flex items-center justify-between bg-green-50 px-2 py-1 rounded">
-                <span className="text-sm text-green-800">{instructor.name}</span>
+              <div key={instructor?.id || Math.random()} className="flex items-center justify-between bg-green-50 px-2 py-1 rounded">
+                <span className="text-sm text-green-800">{instructor?.name || 'Unknown'}</span>
                 <button
                   onClick={() => handleUnassignInstructor(row, instructor)}
                   className="text-red-600 hover:text-red-800"
+                  type="button"
                 >
                   <X size={14} />
                 </button>
@@ -132,7 +160,7 @@ const AssignInstructorPage = () => {
       render: (value, row) => (
         <div className="flex items-center">
           <Users size={16} className="mr-1 text-gray-400" />
-          <span>{row.students?.length || 0}</span>
+          <span>{row?.students?.length || 0}</span>
         </div>
       ),
     },
@@ -144,18 +172,37 @@ const AssignInstructorPage = () => {
           size="sm"
           variant="outline"
           onClick={() => openAssignModal(row)}
+          type="button"
         >
           <UserPlus size={16} className="mr-1" />
           Assign Instructor
         </Button>
       ),
     },
-  ];
+  ], []);
+
+  // Calculate stats safely
+  const totalCourses = Array.isArray(courses) ? courses.length : 0;
+  const availableInstructors = Array.isArray(instructors) ? instructors.length : 0;
+  const assignedCourses = Array.isArray(courses) 
+    ? courses.filter(course => course?.instructors && Array.isArray(course.instructors) && course.instructors.length > 0).length 
+    : 0;
 
   return (
     <ProtectedRoute allowedRoles={['department']}>
       <DashboardLayout>
         <div className="space-y-6">
+          {/* Notification */}
+          {notification && (
+            <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+              notification.type === 'error' 
+                ? 'bg-red-500 text-white' 
+                : 'bg-green-500 text-white'
+            }`}>
+              {notification.message}
+            </div>
+          )}
+
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Assign Instructors</h1>
@@ -172,7 +219,7 @@ const AssignInstructorPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Courses</p>
-                  <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalCourses}</p>
                 </div>
               </div>
             </div>
@@ -183,7 +230,7 @@ const AssignInstructorPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Available Instructors</p>
-                  <p className="text-2xl font-bold text-gray-900">{instructors.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{availableInstructors}</p>
                 </div>
               </div>
             </div>
@@ -194,9 +241,7 @@ const AssignInstructorPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Assigned Courses</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {courses.filter(course => course.instructors && course.instructors.length > 0).length}
-                  </p>
+                  <p className="text-2xl font-bold text-gray-900">{assignedCourses}</p>
                 </div>
               </div>
             </div>
@@ -228,65 +273,67 @@ const AssignInstructorPage = () => {
           </div>
 
           {/* Assign Instructor Modal */}
-          <Modal
-            isOpen={showAssignModal}
-            onClose={closeModal}
-            title={`Assign Instructor to ${selectedCourse?.code}`}
-          >
-            <form onSubmit={handleAssignInstructor}>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Course Details</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="font-medium">{selectedCourse?.code} - {selectedCourse?.title}</p>
-                    <p className="text-sm text-gray-600">{selectedCourse?.description}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Instructor
-                  </label>
-                  <select
-                    value={selectedInstructor}
-                    onChange={(e) => setSelectedInstructor(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Choose an instructor...</option>
-                    {instructors.map((instructor) => (
-                      <option key={instructor.id} value={instructor.id}>
-                        {instructor.name} - {instructor.department?.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {selectedCourse?.instructors && selectedCourse.instructors.length > 0 && (
+          {showAssignModal && selectedCourse && (
+            <Modal
+              isOpen={showAssignModal}
+              onClose={closeModal}
+              title={`Assign Instructor to ${selectedCourse?.code || 'Course'}`}
+            >
+              <form onSubmit={handleAssignInstructor}>
+                <div className="space-y-4">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Currently Assigned:</h4>
-                    <div className="space-y-1">
-                      {selectedCourse.instructors.map((instructor) => (
-                        <div key={instructor.id} className="flex items-center justify-between bg-green-50 px-3 py-2 rounded">
-                          <span className="text-sm text-green-800">{instructor.name}</span>
-                          <span className="text-xs text-green-600">Assigned</span>
-                        </div>
-                      ))}
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Course Details</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="font-medium">{selectedCourse?.code || 'N/A'} - {selectedCourse?.title || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedCourse?.description || 'No description'}</p>
                     </div>
                   </div>
-                )}
-              </div>
-              
-              <div className="flex justify-end space-x-3 mt-6">
-                <Button type="button" variant="outline" onClick={closeModal}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  Assign Instructor
-                </Button>
-              </div>
-            </form>
-          </Modal>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Instructor
+                    </label>
+                    <select
+                      value={selectedInstructor}
+                      onChange={(e) => setSelectedInstructor(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Choose an instructor...</option>
+                      {Array.isArray(instructors) && instructors.map((instructor) => (
+                        <option key={instructor?.id || Math.random()} value={instructor?.id || ''}>
+                          {instructor?.name || 'Unknown'} - {instructor?.department?.name || 'No Department'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedCourse?.instructors && Array.isArray(selectedCourse.instructors) && selectedCourse.instructors.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Currently Assigned:</h4>
+                      <div className="space-y-1">
+                        {selectedCourse.instructors.map((instructor) => (
+                          <div key={instructor?.id || Math.random()} className="flex items-center justify-between bg-green-50 px-3 py-2 rounded">
+                            <span className="text-sm text-green-800">{instructor?.name || 'Unknown'}</span>
+                            <span className="text-xs text-green-600">Assigned</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex justify-end space-x-3 mt-6">
+                  <Button type="button" variant="outline" onClick={closeModal}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Assign Instructor
+                  </Button>
+                </div>
+              </form>
+            </Modal>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

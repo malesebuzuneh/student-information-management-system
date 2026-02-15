@@ -54,7 +54,7 @@ const LoginPage = () => {
     const newErrors = {};
     
     if (!formData.username) {
-      newErrors.username = 'Username is required';
+      newErrors.username = 'Username or Student ID is required';
     }
     
     if (!formData.password) {
@@ -112,7 +112,7 @@ const LoginPage = () => {
             <GraduationCap className="h-8 w-8 text-blue-600" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to MWU SIMS
+            Log in to MWU SIMS
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Madda Walabu University - Computing College
@@ -131,14 +131,14 @@ const LoginPage = () => {
           
           <div className="space-y-4">
             <Input
-              label="Username"
+              label="Username / Student ID"
               name="username"
               type="text"
               value={formData.username}
               onChange={handleChange}
               error={errors.username}
               required
-              placeholder="Enter your username"
+              placeholder="Enter your username or student ID"
             />
             
             <Input
@@ -160,7 +160,7 @@ const LoginPage = () => {
               loading={loading}
               disabled={loading}
             >
-              Sign in
+              Log in
             </Button>
           </div>
         </form>

@@ -49,20 +49,65 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
-            'role' => 'required|in:admin,student,instructor,department'
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users|unique:students',
+            'password' => 'required|min:8|confirmed',
+            'date_of_birth' => 'required|date',
+            'gender' => 'required|in:male,female,other',
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string',
+            'department_id' => 'required|exists:departments,id',
         ]);
 
+        // Generate unique student ID using UGR prefix
+        $studentId = \App\Models\Student::generateStudentId();
+        
+        // Use student ID directly as username
+        $username = $studentId;
+
+        // Create user account
         $user = User::create([
             'name' => $request->name,
+            'username' => $username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => 'student',
+            'is_first_login' => false, // Self-registered students don't need password change
+            'status' => 'active',
         ]);
 
-        return response()->json($user, 201);
+        // Create student record
+        $student = \App\Models\Student::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'student_id' => $studentId,
+            'date_of_birth' => $request->date_of_birth,
+            'gender' => $request->gender,
+            'address' => $request->address,
+            'phone' => $request->phone,
+            'emergency_contact' => $request->emergency_contact ?? 'N/A',
+            'emergency_phone' => $request->emergency_phone ?? 'N/A',
+            'department_id' => $request->department_id,
+            'program' => $request->program ?? 'Undergraduate',
+            'year' => $request->year ?? 1,
+            'semester' => $request->semester ?? 1,
+            'admission_type' => 'regular',
+            'admission_date' => now(),
+            'status' => 'active',
+            'is_first_login' => false,
+            'user_id' => $user->id,
+        ]);
+
+        // Create token for auto-login
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Registration successful! Welcome to the system.',
+            'token' => $token,
+            'user' => $user->load('student'),
+            'student_id' => $studentId,
+            'username' => $username,
+        ], 201);
     }
 
     /**
@@ -70,12 +115,12 @@ class AuthController extends Controller
      *     path="/login",
      *     tags={"Authentication"},
      *     summary="User login",
-     *     description="Authenticate user and return access token",
+     *     description="Authenticate user and return access token. Students use their Student ID as username.",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *             required={"username","password"},
+     *             @OA\Property(property="username", type="string", example="UGR/50001/26 or admin", description="Student ID for students or username for staff"),
      *             @OA\Property(property="password", type="string", format="password", example="password123")
      *         )
      *     ),
@@ -116,7 +161,10 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = User::with(['student', 'instructor', 'department'])->where('username', $request->username)->first();
+        $loginField = $request->username;
+        
+        // Find user by username (which could be student ID or regular username)
+        $user = User::with(['student', 'instructor', 'department'])->where('username', $loginField)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
@@ -203,5 +251,87 @@ class AuthController extends Controller
     {
         $user = $request->user()->load(['student', 'instructor']);
         return response()->json($user);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/change-password",
+     *     tags={"Authentication"},
+     *     summary="Change user password",
+     *     description="Allow authenticated users to change their own password",
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"current_password","new_password","new_password_confirmation"},
+     *             @OA\Property(property="current_password", type="string", format="password", example="oldpassword123"),
+     *             @OA\Property(property="new_password", type="string", format="password", minLength=8, example="newpassword123"),
+     *             @OA\Property(property="new_password_confirmation", type="string", format="password", example="newpassword123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password changed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Password changed successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid current password",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Current password is incorrect")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+            'new_password_confirmation' => 'required'
+        ]);
+
+        $user = $request->user();
+
+        // Verify current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'error' => 'Current password is incorrect'
+            ], 400);
+        }
+
+        // Check if new password is different from current
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json([
+                'error' => 'New password must be different from current password'
+            ], 400);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->new_password),
+            'is_first_login' => false // Clear first login flag if set
+        ]);
+
+        // Update student record if user is a student
+        if ($user->role === 'student' && $user->student) {
+            $user->student->update([
+                'is_first_login' => false
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Password changed successfully'
+        ]);
     }
 }

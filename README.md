@@ -1,62 +1,82 @@
 # Student Information Management System (SIMS)
 
-A comprehensive web-based Student Information Management System built with Laravel (Backend) and Next.js (Frontend).
+A comprehensive web-based Student Information Management System built for Madda Walabu University - Computing College.
 
-## 🎯 Features
+## 🎓 Overview
 
-### Role-Based Access Control
-- **Admin**: Full system control, user management, course creation
-- **Department Head**: Department-specific management, enrollment approvals, instructor assignments
-- **Instructor**: Course teaching, grade entry, attendance tracking
-- **Student**: Course enrollment, grade viewing, profile management
+SIMS is a full-stack web application that manages student information, course enrollment, grades, and attendance. The system supports multiple user roles with specific permissions and workflows.
+
+## 🏗️ Architecture
+
+- **Frontend**: Next.js 14 with React, TypeScript, and Tailwind CSS
+- **Backend**: Laravel 11 with PHP 8.2+
+- **Database**: MySQL
+- **Authentication**: Laravel Sanctum with role-based access control
+
+## 👥 User Roles
+
+### 🔧 Admin
+- Manage all users (students, instructors, department heads)
+- Create and manage departments
+- System-wide oversight and reporting
+- Final grade approval
+
+### 🏢 Department Head
+- Manage department courses
+- Approve student enrollments
+- Assign instructors to courses
+- Department-level reporting
+
+### 👨‍🏫 Instructor
+- View assigned courses and students
+- Enter and manage grades
+- Record student attendance
+- Course-level reporting
+
+### 🎓 Student
+- View enrolled courses
+- Check grades and attendance
+- Update personal profile
+- Request course enrollment
+
+## 🚀 Features
 
 ### Core Functionality
-- ✅ User authentication and authorization
-- ✅ Course management and enrollment workflow
-- ✅ Grade entry and approval system
-- ✅ Attendance tracking
-- ✅ Department management
-- ✅ Student and instructor management
-- ✅ Real-time dashboards for all roles
-- ✅ Enrollment approval workflow
+- **User Management**: Role-based authentication and authorization
+- **Course Management**: Create, assign, and manage courses
+- **Enrollment System**: Student enrollment with department approval
+- **Grade Management**: Grade entry, approval workflow, and reporting
+- **Attendance Tracking**: Record and monitor student attendance
+- **Dashboard Analytics**: Role-specific dashboards with key metrics
 
-## 🏗️ System Architecture
+### Security Features
+- JWT-based authentication
+- Role-based access control
+- Password change enforcement
+- Secure API endpoints
+- Input validation and sanitization
 
-### Backend (Laravel 11)
-- RESTful API architecture
-- Sanctum authentication
-- Policy-based authorization
-- MySQL database
-- Comprehensive API documentation
+## 📋 Prerequisites
 
-### Frontend (Next.js 16)
-- React-based UI
-- Server-side rendering
-- Responsive design
-- Role-based routing
-- Protected routes
-
-## 📋 Course Workflow
-
-1. **Admin creates course** → Course visible to department and students
-2. **Student registers for course** → Enrollment request (pending status)
-3. **Department assigns instructor** → Instructor can teach course
-4. **Department approves enrollment** → Student can access course
-5. **Instructor enters grades** → Grade submission workflow
-6. **Department approves grades** → Grade approval
-7. **Admin finalizes grades** → Student can view final grades
-
-## 🚀 Installation
-
-### Prerequisites
+### Backend Requirements
 - PHP 8.2 or higher
 - Composer
-- Node.js 18+ and npm
-- MySQL 8.0+
-- Git
+- MySQL 8.0 or higher
+- Laravel 11
 
-### Backend Setup
+### Frontend Requirements
+- Node.js 18 or higher
+- npm or yarn
 
+## 🛠️ Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/student-information-management-system.git
+cd student-information-management-system
+```
+
+### 2. Backend Setup (Laravel)
 ```bash
 cd sims-backend
 
@@ -64,201 +84,214 @@ cd sims-backend
 composer install
 
 # Copy environment file
-copy .env.example .env
+cp .env.example .env
 
 # Generate application key
 php artisan key:generate
 
 # Configure database in .env file
-# DB_CONNECTION=mysql
-# DB_HOST=127.0.0.1
-# DB_PORT=3306
-# DB_DATABASE=sims_db
-# DB_USERNAME=root
-# DB_PASSWORD=
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sims_db
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 
-# Run migrations
+# Run migrations and seeders
 php artisan migrate
-
-# Seed database with sample data
 php artisan db:seed
 
-# Start development server
+# Start the backend server
 php artisan serve
 ```
 
-Backend will run on: `http://localhost:8000`
-
-### Frontend Setup
-
+### 3. Frontend Setup (Next.js)
 ```bash
 cd sims-frontend
 
 # Install dependencies
 npm install
 
-# Start development server
+# Create environment file
+cp .env.example .env.local
+
+# Configure API URL in .env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+
+# Start the frontend server
 npm run dev
 ```
 
-Frontend will run on: `http://localhost:3000`
-
 ## 🔑 Default Login Credentials
 
-After seeding the database, use these credentials:
-
 ### Admin
-- **Username**: `admin`
-- **Password**: `password`
+- **Username**: `melese74`
+- **Password**: `password123`
 
-### Department Head (IT Department)
-- **Username**: `assmamaw`
-- **Password**: `password`
+### Department Heads
+- **CS Department**: `cs1000126` / `password123`
+- **IT Department**: `ithead` / `password123`
+- **IS Department**: `isyhead` / `password123`
+- **ISY Department**: `ishead` / `password123`
 
-### Test Accounts
-Additional test accounts are created during seeding. Check the seeders for details.
+### Instructors
+- **Andualem**: `cs1000226` / `password123`
+- **Milion Sime**: `instructor_milion` / `password123`
+
+### Students
+- **Miese Haji**: `UGR/50001/26` / `password123`
 
 ## 📁 Project Structure
 
 ```
 student-information-management-system/
-├── sims-backend/           # Laravel backend
+├── sims-backend/                 # Laravel backend
 │   ├── app/
-│   │   ├── Http/
-│   │   │   ├── Controllers/
-│   │   │   ├── Middleware/
-│   │   │   └── Requests/
-│   │   ├── Models/
-│   │   └── Policies/
+│   │   ├── Http/Controllers/     # API controllers
+│   │   ├── Models/              # Eloquent models
+│   │   ├── Policies/            # Authorization policies
+│   │   └── Middleware/          # Custom middleware
 │   ├── database/
-│   │   ├── migrations/
-│   │   └── seeders/
-│   └── routes/
-│       └── api.php
-│
-├── sims-frontend/          # Next.js frontend
+│   │   ├── migrations/          # Database migrations
+│   │   └── seeders/             # Database seeders
+│   └── routes/api.php           # API routes
+├── sims-frontend/               # Next.js frontend
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── admin/
-│   │   │   ├── department/
-│   │   │   ├── instructor/
-│   │   │   └── student/
-│   │   ├── components/
-│   │   ├── contexts/
-│   │   └── services/
-│   └── public/
-│
-└── README.md
+│   │   ├── app/                 # App router pages
+│   │   ├── components/          # Reusable components
+│   │   ├── contexts/            # React contexts
+│   │   ├── services/            # API services
+│   │   └── utils/               # Utility functions
+│   └── public/                  # Static assets
+└── README.md                    # This file
 ```
 
-## 🔐 Security Features
+## 🔄 Workflow
 
-- JWT token-based authentication
-- Role-based access control (RBAC)
-- Policy-based authorization
-- Protected API routes
-- CORS configuration
-- Password hashing
-- SQL injection prevention
-- XSS protection
+### Student Enrollment Process
+1. **Student** requests enrollment in a course
+2. **Department Head** approves/rejects the enrollment
+3. **Instructor** can see enrolled students
+4. **Student** appears in course roster
 
-## 🛠️ Technologies Used
+### Grade Management Process
+1. **Instructor** enters grades for students
+2. **Department Head** reviews and approves grades
+3. **Admin** finalizes grades (optional)
+4. **Student** can view final grades
 
-### Backend
-- Laravel 11
-- PHP 8.2+
-- MySQL
-- Laravel Sanctum (Authentication)
-- Laravel Policies (Authorization)
-
-### Frontend
-- Next.js 16
-- React 19
-- Tailwind CSS
-- Axios
-- Lucide Icons
-
-## 📊 Database Schema
-
-### Main Tables
-- `users` - System users with role-based access
-- `departments` - Academic departments
-- `students` - Student information
-- `instructors` - Instructor information
-- `courses` - Course catalog
-- `grades` - Student grades with approval workflow
-- `attendances` - Attendance records
-- `course_instructor` - Course-instructor assignments
-- `course_student` - Course enrollments with status
-
-## 🔄 API Endpoints
+## 🌐 API Endpoints
 
 ### Authentication
 - `POST /api/login` - User login
 - `POST /api/logout` - User logout
-- `GET /api/profile` - Get user profile
+- `POST /api/change-password` - Change password
 
 ### Admin Routes
 - `GET /api/admin/dashboard` - Admin dashboard data
-- `POST /api/courses` - Create course
-- `GET /api/students` - List students
-- `POST /api/students` - Create student
-- `GET /api/instructors` - List instructors
-- `POST /api/instructors` - Create instructor
+- `GET /api/students` - Manage students
+- `GET /api/instructors` - Manage instructors
+- `GET /api/departments` - Manage departments
 
 ### Department Routes
 - `GET /api/department/dashboard` - Department dashboard
-- `POST /api/courses/{courseId}/assign-instructor` - Assign instructor
-- `PUT /api/courses/{courseId}/students/{studentId}/approve` - Approve enrollment
-- `GET /api/department/pending-enrollments` - View pending enrollments
-
-### Student Routes
-- `GET /api/student/dashboard` - Student dashboard
-- `GET /api/student/available-courses` - View available courses
-- `POST /api/student/enroll/{courseId}` - Request enrollment
-- `GET /api/student/grades` - View grades
+- `GET /api/department/courses` - Department courses
+- `PUT /api/courses/{id}/students/{id}/approve` - Approve enrollment
 
 ### Instructor Routes
 - `GET /api/instructor/dashboard` - Instructor dashboard
-- `GET /api/instructor/courses` - View assigned courses
+- `GET /api/instructor/courses` - Assigned courses
 - `POST /api/instructor/grades` - Enter grades
 - `POST /api/instructor/attendance` - Record attendance
 
-## 📝 Documentation
+### Student Routes
+- `GET /api/student/dashboard` - Student dashboard
+- `GET /api/student/grades` - View grades
+- `POST /api/student/enroll/{courseId}` - Request enrollment
 
-Additional documentation files:
-- `COURSE_WORKFLOW_SUMMARY.md` - Detailed course workflow
-- `COURSE_WORKFLOW_IMPLEMENTATION.md` - Implementation details
-- `ROLE_PERMISSIONS_VERIFICATION.md` - Role permissions matrix
-- `API_DOCUMENTATION.md` - Complete API documentation
+## 🧪 Testing
+
+### Backend Testing
+```bash
+cd sims-backend
+php artisan test
+```
+
+### Frontend Testing
+```bash
+cd sims-frontend
+npm run test
+```
+
+## 🚀 Deployment
+
+### Production Environment Variables
+
+#### Backend (.env)
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+
+DB_CONNECTION=mysql
+DB_HOST=your-db-host
+DB_DATABASE=your-db-name
+DB_USERNAME=your-db-user
+DB_PASSWORD=your-db-password
+
+SANCTUM_STATEFUL_DOMAINS=your-frontend-domain.com
+```
+
+#### Frontend (.env.local)
+```env
+NEXT_PUBLIC_API_URL=https://your-api-domain.com/api
+```
+
+### Deployment Steps
+1. Set up production database
+2. Configure environment variables
+3. Run migrations: `php artisan migrate --force`
+4. Run seeders: `php artisan db:seed --force`
+5. Build frontend: `npm run build`
+6. Deploy to your hosting platform
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit changes: `git commit -am 'Add new feature'`
+4. Push to branch: `git push origin feature/new-feature`
+5. Submit a pull request
 
-## 📄 License
+## 📝 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
+## 👨‍💻 Authors
 
-- **Maleseb Uzuneh** - [GitHub](https://github.com/malesebuzuneh)
+- **Development Team** - Initial work and ongoing development
 
 ## 🙏 Acknowledgments
 
+- Madda Walabu University - Computing College
 - Laravel Framework
 - Next.js Framework
-- Tailwind CSS
 - All contributors and testers
 
 ## 📞 Support
 
-For support, email your-email@example.com or open an issue in the GitHub repository.
+For support and questions:
+- Create an issue in this repository
+- Contact the development team
+
+## 🔄 Version History
+
+- **v1.0.0** - Initial release with core functionality
+  - User management and authentication
+  - Course and enrollment management
+  - Grade and attendance tracking
+  - Role-based dashboards
 
 ---
 
-**Note**: This is a development version. For production deployment, ensure proper security configurations, environment variables, and server setup.
+**Made with ❤️ for Madda Walabu University - Computing College**

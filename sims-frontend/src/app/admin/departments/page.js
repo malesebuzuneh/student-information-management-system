@@ -32,13 +32,6 @@ import api from '@/services/api';
 const getDefaultFormData = () => ({
   name: '',
   code: '',
-  description: '',
-  head_name: '',
-  head_email: '',
-  phone: '',
-  location: '',
-  established_year: '',
-  status: 'active',
 });
 
 const AdminDepartmentsPage = () => {
@@ -83,7 +76,11 @@ const AdminDepartmentsPage = () => {
     try {
       setLoading(true);
       const response = await api.get('/departments');
-      setDepartments(response.data.data || response.data || []);
+      const departmentsData = response.data.data || response.data || [];
+      setDepartments(departmentsData);
+      
+      // Also refresh stats when departments are loaded
+      fetchStats();
     } catch (error) {
       console.error('Error fetching departments:', error);
       showNotification('Failed to fetch departments', 'error');
@@ -103,10 +100,21 @@ const AdminDepartmentsPage = () => {
 
   const fetchStats = async () => {
     try {
+      console.log('Fetching department stats...');
       const response = await api.get('/departments/stats/overview');
+      console.log('Stats response:', response.data);
       setStats(response.data.stats || {});
     } catch (error) {
       console.error('Error fetching stats:', error);
+      console.error('Stats error details:', error.response?.data);
+      // Set default stats if API fails
+      setStats({
+        total_departments: departments.length,
+        active_departments: departments.filter(d => d.status === 'active').length,
+        inactive_departments: departments.filter(d => d.status !== 'active').length,
+        total_students_across_departments: 0,
+        total_courses_across_departments: 0
+      });
     }
   };
 
@@ -114,12 +122,15 @@ const AdminDepartmentsPage = () => {
     e.preventDefault();
     try {
       const departmentData = {
-        ...formData,
-        established_year: formData.established_year ? parseInt(formData.established_year) : null
+        name: formData.name,
+        code: formData.code,
+        status: 'active' // Default status
       };
       
       const response = await api.post('/departments', departmentData);
-      showNotification('Department created successfully');
+      
+      showNotification('Department created successfully! You can now assign a department head from the instructors.');
+      
       setShowAddModal(false);
       setFormData(getDefaultFormData());
       fetchDepartments();
@@ -135,8 +146,9 @@ const AdminDepartmentsPage = () => {
     e.preventDefault();
     try {
       const departmentData = {
-        ...formData,
-        established_year: formData.established_year ? parseInt(formData.established_year) : null
+        name: formData.name,
+        code: formData.code,
+        status: editingDepartment.status || 'active' // Keep existing status
       };
       
       await api.put(`/departments/${editingDepartment.id}`, departmentData);
@@ -276,13 +288,6 @@ const AdminDepartmentsPage = () => {
     setFormData({
       name: department.name || '',
       code: department.code || '',
-      description: department.description || '',
-      head_name: department.head_name || '',
-      head_email: department.head_email || '',
-      phone: department.phone || '',
-      location: department.location || '',
-      established_year: department.established_year?.toString() || '',
-      status: department.status || 'active',
     });
   };
 
@@ -632,104 +637,26 @@ const AdminDepartmentsPage = () => {
             isOpen={showAddModal || editingDepartment}
             onClose={closeModal}
             title={editingDepartment ? 'Edit Department' : 'Add New Department'}
-            size="lg"
+            size="md"
           >
             <form onSubmit={editingDepartment ? handleEditDepartment : handleAddDepartment}>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Department Code"
-                    name="code"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    placeholder="e.g., CS"
-                    required
-                  />
-                  <Input
-                    label="Department Name"
-                    name="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., Computer Science"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows="3"
-                    placeholder="Department description..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Head Name"
-                    name="head_name"
-                    value={formData.head_name}
-                    onChange={(e) => setFormData({ ...formData, head_name: e.target.value })}
-                    placeholder="e.g., Dr. John Smith"
-                  />
-                  <Input
-                    label="Head Email"
-                    name="head_email"
-                    type="email"
-                    value={formData.head_email}
-                    onChange={(e) => setFormData({ ...formData, head_email: e.target.value })}
-                    placeholder="head@university.edu"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+251-xxx-xxx-xxx"
-                  />
-                  <Input
-                    label="Location"
-                    name="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="e.g., Building A, Floor 2"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Established Year"
-                    name="established_year"
-                    type="number"
-                    value={formData.established_year}
-                    onChange={(e) => setFormData({ ...formData, established_year: e.target.value })}
-                    placeholder="e.g., 2010"
-                    min="1900"
-                    max={new Date().getFullYear()}
-                  />
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
-                </div>
+                <Input
+                  label="Department Code"
+                  name="code"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  placeholder="e.g., CS"
+                  required
+                />
+                <Input
+                  label="Department Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g., Computer Science"
+                  required
+                />
               </div>
               
               <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">

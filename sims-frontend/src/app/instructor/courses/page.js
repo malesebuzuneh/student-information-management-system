@@ -1,54 +1,36 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/utils/authGuard';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Button from '@/components/ui/Button';
 import Table from '@/components/ui/Table';
-import { BookOpen, Users, Calendar, Clock } from 'lucide-react';
+import { BookOpen, Users, Calendar, Clock, Eye, UserCheck, BarChart3, ClipboardList } from 'lucide-react';
+import api from '@/services/api';
 
 const InstructorCourses = () => {
+  const router = useRouter();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Mock data for now - replace with actual API call
-    setTimeout(() => {
-      setCourses([
-        {
-          id: 1,
-          code: 'CS101',
-          name: 'Introduction to Programming',
-          department: 'Computer Science',
-          students: 25,
-          schedule: 'Mon, Wed, Fri 10:00 AM',
-          semester: 'Spring 2026',
-          status: 'Active'
-        },
-        {
-          id: 2,
-          code: 'CS201',
-          name: 'Data Structures',
-          department: 'Computer Science',
-          students: 20,
-          schedule: 'Tue, Thu 2:00 PM',
-          semester: 'Spring 2026',
-          status: 'Active'
-        },
-        {
-          id: 3,
-          code: 'CS301',
-          name: 'Database Systems',
-          department: 'Computer Science',
-          students: 18,
-          schedule: 'Mon, Wed 3:00 PM',
-          semester: 'Spring 2026',
-          status: 'Active'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    fetchCourses();
   }, []);
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/instructor/courses');
+      setCourses(response.data.courses || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      setError('Failed to load courses');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = [
     {
@@ -63,44 +45,28 @@ const InstructorCourses = () => {
     },
     {
       header: 'Course Name',
-      accessor: 'name'
+      accessor: 'title',
+      render: (value) => value || 'N/A'
     },
     {
       header: 'Department',
-      accessor: 'department'
+      accessor: 'department',
+      render: (value, row) => row.department?.name || 'N/A'
     },
     {
       header: 'Students',
-      accessor: 'students',
+      accessor: 'students_count',
       render: (value) => (
         <div className="flex items-center space-x-1">
           <Users className="h-4 w-4 text-gray-500" />
-          <span>{value}</span>
+          <span>{value || 0}</span>
         </div>
       )
     },
     {
-      header: 'Schedule',
-      accessor: 'schedule',
-      render: (value) => (
-        <div className="flex items-center space-x-1">
-          <Clock className="h-4 w-4 text-gray-500" />
-          <span className="text-sm">{value}</span>
-        </div>
-      )
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
-      render: (value) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          value === 'Active' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-gray-100 text-gray-800'
-        }`}>
-          {value}
-        </span>
-      )
+      header: 'Credits',
+      accessor: 'credits',
+      render: (value) => value || 'N/A'
     },
     {
       header: 'Actions',
@@ -110,30 +76,48 @@ const InstructorCourses = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleViewCourse(row.id)}
+            onClick={() => handleViewStudents(row.id)}
+            className="flex items-center space-x-1"
           >
-            View Details
+            <Users className="h-4 w-4" />
+            <span>Students</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleManageStudents(row.id)}
+            onClick={() => handleManageGrades(row.id)}
+            className="flex items-center space-x-1"
           >
-            Manage Students
+            <BarChart3 className="h-4 w-4" />
+            <span>Grades</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleManageAttendance(row.id)}
+            className="flex items-center space-x-1"
+          >
+            <ClipboardList className="h-4 w-4" />
+            <span>Attendance</span>
           </Button>
         </div>
       )
     }
   ];
 
-  const handleViewCourse = (courseId) => {
-    // Handle view course details
-    console.log('View course:', courseId);
+  const handleViewStudents = (courseId) => {
+    // Navigate to course students page
+    router.push(`/instructor/courses/${courseId}/students`);
   };
 
-  const handleManageStudents = (courseId) => {
-    // Handle manage students
-    console.log('Manage students for course:', courseId);
+  const handleManageGrades = (courseId) => {
+    // Navigate to grades management page
+    router.push(`/instructor/grades?course=${courseId}`);
+  };
+
+  const handleManageAttendance = (courseId) => {
+    // Navigate to attendance management page
+    router.push(`/instructor/attendance?course=${courseId}`);
   };
 
   return (
@@ -150,6 +134,17 @@ const InstructorCourses = () => {
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-lg text-red-600">{error}</div>
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-12 text-center">
+              <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Courses Assigned</h3>
+              <p className="text-gray-600">You don't have any courses assigned yet.</p>
+              <p className="text-sm text-gray-500 mt-2">Contact your department head for course assignments.</p>
             </div>
           ) : (
             <>
@@ -175,7 +170,7 @@ const InstructorCourses = () => {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">Total Students</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {courses.reduce((sum, course) => sum + course.students, 0)}
+                        {courses.reduce((sum, course) => sum + (course.students_count || 0), 0)}
                       </p>
                     </div>
                   </div>
@@ -187,8 +182,10 @@ const InstructorCourses = () => {
                       <Calendar className="h-6 w-6 text-white" />
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Active Semester</p>
-                      <p className="text-2xl font-bold text-gray-900">Spring 2026</p>
+                      <p className="text-sm font-medium text-gray-600">Total Credits</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {courses.reduce((sum, course) => sum + (course.credits || 0), 0)}
+                      </p>
                     </div>
                   </div>
                 </div>

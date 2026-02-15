@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->command->info('✅ System admin created successfully!');
-        $this->command->info('🔑 Login: admin@mwu.edu.et / password');
+        $this->command->info('🔑 Username: melese74');
+        $this->command->info('🔑 Password: 0dfd27mb');
         $this->command->info('📝 Use admin interface to create departments, instructors, students, and courses.');
     }
 }

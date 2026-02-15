@@ -16,9 +16,9 @@ class Instructor extends Model
         'instructor_id',
         'department_id',
         'qualification',
+        'specialization',
         'status',
         'archived_at',
-        'is_first_login',
         'last_login',
         'user_id', // Add user_id to link with User model
     ];
@@ -26,7 +26,6 @@ class Instructor extends Model
     protected $casts = [
         'archived_at' => 'datetime',
         'last_login' => 'datetime',
-        'is_first_login' => 'boolean',
     ];
 
     // Instructor belongs to a User (for authentication)

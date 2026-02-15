@@ -16,6 +16,7 @@ import {
   ClipboardList,
   UserCheck,
   FileText,
+  Key,
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -29,28 +30,35 @@ const Sidebar = () => {
       { name: 'Instructors', href: '/admin/instructors', icon: GraduationCap },
       { name: 'Departments', href: '/admin/departments', icon: Building },
       { name: 'Courses', href: '/admin/courses', icon: BookOpen },
+      { name: 'Grade Finalization', href: '/admin/grades', icon: FileText },
       { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
       { name: 'Settings', href: '/admin/settings', icon: Settings },
+      { name: 'Change Password', href: '/change-password', icon: Key },
     ],
     department: [
       { name: 'Dashboard', href: '/department/dashboard', icon: Home },
       { name: 'Courses', href: '/department/courses', icon: BookOpen },
       { name: 'Assign Instructor', href: '/department/assign-instructor', icon: UserCheck },
       { name: 'Enrollments', href: '/department/enrollments', icon: ClipboardList },
+      { name: 'Grade Approval', href: '/department/grades', icon: FileText },
       { name: 'Progress', href: '/department/progress', icon: BarChart3 },
+      { name: 'Change Password', href: '/change-password', icon: Key },
     ],
     instructor: [
       { name: 'Dashboard', href: '/instructor/dashboard', icon: Home },
       { name: 'My Courses', href: '/instructor/courses', icon: BookOpen },
       { name: 'Grades', href: '/instructor/grades', icon: FileText },
       { name: 'Attendance', href: '/instructor/attendance', icon: UserCheck },
+      { name: 'Change Password', href: '/change-password', icon: Key },
     ],
     student: [
       { name: 'Dashboard', href: '/student/dashboard', icon: Home },
       { name: 'Courses', href: '/student/courses', icon: BookOpen },
       { name: 'Schedule', href: '/student/schedule', icon: Calendar },
-      { name: 'Profile', href: '/student/profile', icon: Users },
+      { name: 'Attendance', href: '/student/attendance', icon: UserCheck },
       { name: 'Grades', href: '/student/grades', icon: FileText },
+      { name: 'Profile', href: '/student/profile', icon: Users },
+      { name: 'Change Password', href: '/change-password', icon: Key },
     ],
   };
 

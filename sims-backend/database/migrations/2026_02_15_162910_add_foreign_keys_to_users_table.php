@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Add foreign key to users table
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('department_id')->nullable()->constrained('departments')->onDelete('set null')->after('role');
+            $table->foreign('department_id')->references('id')->on('departments')->onDelete('set null');
+        });
+
+        // Add foreign key to departments table
+        Schema::table('departments', function (Blueprint $table) {
+            $table->foreign('head_instructor_id')->references('id')->on('instructors')->onDelete('set null');
         });
     }
 
@@ -23,7 +29,10 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['department_id']);
-            $table->dropColumn('department_id');
+        });
+
+        Schema::table('departments', function (Blueprint $table) {
+            $table->dropForeign(['head_instructor_id']);
         });
     }
 };

@@ -12,7 +12,11 @@ class StudentController extends Controller
 {
     public function index()
     {
-        return Student::with(['department', 'user'])->get();
+        $students = Student::with(['department', 'user'])->get();
+        return response()->json([
+            'students' => $students,
+            'message' => 'Students retrieved successfully'
+        ]);
     }
 
     public function store(Request $request)
@@ -37,21 +41,11 @@ class StudentController extends Controller
         // Generate a temporary password for the student
         $temporaryPassword = Str::random(8);
 
-        // Generate unique student ID using department code
-        $department = \App\Models\Department::find($request->department_id);
-        $departmentCode = $department ? $department->code : 'UGR';
-        $studentId = Student::generateStudentId($departmentCode, date('y'));
+        // Generate unique student ID using UGR prefix
+        $studentId = Student::generateStudentId();
         
-        // Generate username from student ID (e.g., UGR/50001/26 → ugr50001)
-        $baseUsername = strtolower(str_replace(['/', '-'], '', $studentId));
-        $username = $baseUsername;
-        $counter = 1;
-        
-        // Ensure username is unique
-        while (User::where('username', $username)->exists()) {
-            $username = $baseUsername . $counter;
-            $counter++;
-        }
+        // Use student ID directly as username
+        $username = $studentId;
 
         // Create user account for the student
         $user = User::create([
@@ -81,7 +75,6 @@ class StudentController extends Controller
             'admission_type' => $request->admission_type,
             'admission_date' => $request->admission_date,
             'status' => 'active',
-            'is_first_login' => true,
             'user_id' => $user->id,
         ]);
 
@@ -100,7 +93,11 @@ class StudentController extends Controller
 
     public function show($id)
     {
-        return Student::with(['department', 'user'])->findOrFail($id);
+        $student = Student::with(['department', 'user'])->findOrFail($id);
+        return response()->json([
+            'student' => $student,
+            'message' => 'Student details retrieved successfully'
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -127,7 +124,10 @@ class StudentController extends Controller
             ]);
         }
 
-        return $student->load(['department', 'user']);
+        return response()->json([
+            'student' => $student->load(['department', 'user']),
+            'message' => 'Student updated successfully'
+        ]);
     }
 
     public function destroy($id)
@@ -145,15 +145,75 @@ class StudentController extends Controller
     }
 
     // Student-specific methods
+    public function myProfile()
+    {
+        $user = auth()->user();
+        $student = $user->student;
+
+        if (!$student) {
+            return response()->json(['error' => 'Student profile not found'], 404);
+        }
+
+        return response()->json($student->load(['department', 'user']));
+    }
+
+    public function updateMyProfile(Request $request)
+    {
+        $user = auth()->user();
+        $student = $user->student;
+
+        if (!$student) {
+            return response()->json(['error' => 'Student profile not found'], 404);
+        }
+
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'emergency_contact' => 'nullable|string|max:255',
+            'emergency_phone' => 'nullable|string|max:20',
+        ]);
+
+        // Students can only update certain fields
+        $allowedFields = ['name', 'phone', 'address', 'emergency_contact', 'emergency_phone'];
+        $updateData = [];
+        
+        foreach ($allowedFields as $field) {
+            if ($request->has($field)) {
+                $updateData[$field] = $request->input($field);
+            }
+        }
+
+        $student->update($updateData);
+
+        // Also update user name if provided
+        if ($request->has('name')) {
+            $user->update(['name' => $request->name]);
+        }
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'student' => $student->fresh()->load(['department', 'user'])
+        ]);
+    }
+
     public function viewProfile($id)
     {
-        return Student::with(['department', 'user'])->findOrFail($id);
+        $student = Student::with(['department', 'user'])->findOrFail($id);
+        return response()->json([
+            'student' => $student,
+            'message' => 'Student profile retrieved successfully'
+        ]);
     }
 
     public function viewGrades($id)
     {
         $student = Student::with('grades.course')->findOrFail($id);
-        return $student->grades;
+        return response()->json([
+            'grades' => $student->grades,
+            'student' => $student,
+            'message' => 'Student grades retrieved successfully'
+        ]);
     }
 
     // Student Dashboard
@@ -189,37 +249,9 @@ class StudentController extends Controller
         
         $gpa = $totalCredits > 0 ? round($totalPoints / $totalCredits, 2) : 0;
 
-        // Get upcoming assignments/deadlines (mock data for now)
-        $upcomingDeadlines = [
-            [
-                'title' => 'Programming Assignment 2',
-                'course' => 'CS101',
-                'due_date' => now()->addDays(3)->toDateString(),
-                'type' => 'assignment'
-            ],
-            [
-                'title' => 'Midterm Exam',
-                'course' => 'CS201',
-                'due_date' => now()->addDays(7)->toDateString(),
-                'type' => 'exam'
-            ]
-        ];
-
-        // Get recent announcements (mock data for now)
-        $announcements = [
-            [
-                'title' => 'Course Registration Open',
-                'message' => 'Course registration for next semester is now open',
-                'date' => now()->subDays(1)->toDateString(),
-                'course' => 'General'
-            ],
-            [
-                'title' => 'Assignment Extension',
-                'message' => 'Programming assignment deadline extended by 2 days',
-                'date' => now()->subDays(2)->toDateString(),
-                'course' => 'CS201'
-            ]
-        ];
+        // No mock data - return empty arrays if no real data exists
+        $upcomingDeadlines = [];
+        $announcements = [];
 
         return response()->json([
             'student' => $student->load(['department', 'user']),
@@ -336,6 +368,7 @@ class StudentController extends Controller
     }
 
     // Enhanced enrollment request
+    public function requestEnrollment($courseId)
     {
         $user = auth()->user();
         $student = $user->student;

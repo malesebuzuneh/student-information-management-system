@@ -169,7 +169,7 @@ const StudentsPage = () => {
       // Show success message with login credentials
       const { student, temporary_password, student_id, username } = response.data;
       alert(
-        `Student registered successfully!\n\nStudent Details:\nStudent ID: ${student_id}\nName: ${student.name}\nEmail: ${student.email}\n\nLogin Credentials:\nUsername: ${username}\nTemporary Password: ${temporary_password}\n\nPlease share these credentials with the student. They will be required to change their password on first login.`
+        `Student registered successfully!\n\nStudent Details:\nStudent ID: ${student_id}\nName: ${student.name}\nEmail: ${student.email}\n\nLogin Credentials:\nUsername: ${student_id} (same as Student ID)\nTemporary Password: ${temporary_password}\n\nPlease share these credentials with the student. They will be required to change their password on first login.`
       );
       
       setShowAddModal(false);
@@ -203,7 +203,7 @@ const StudentsPage = () => {
         const response = await api.post(`/students/${student.id}/reset-password`);
         const { new_password } = response.data;
         alert(
-          `Password reset successfully!\n\nNew Login Credentials:\nUsername: ${student.user?.username || 'N/A'}\nNew Password: ${new_password}\n\nPlease share this with the student.`
+          `Password reset successfully!\n\nNew Login Credentials:\nUsername: ${student.student_id} (Student ID)\nNew Password: ${new_password}\n\nPlease share this with the student.`
         );
       } catch (error) {
         console.error('Error resetting password:', error);
@@ -367,11 +367,6 @@ const StudentsPage = () => {
     {
       header: 'Email',
       accessor: 'email',
-    },
-    {
-      header: 'Username',
-      accessor: 'user',
-      render: (value, row) => row.user?.username || 'N/A',
     },
     {
       header: 'Department',
