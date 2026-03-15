@@ -121,26 +121,6 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 # Start the frontend server
 npm run dev
 ```
-
-## 🔑 Default Login Credentials
-
-### Admin
-- **Username**: `melese74`
-- **Password**: `password123`
-
-### Department Heads
-- **CS Department**: `cs1000126` / `password123`
-- **IT Department**: `ithead` / `password123`
-- **IS Department**: `isyhead` / `password123`
-- **ISY Department**: `ishead` / `password123`
-
-### Instructors
-- **Andualem**: `cs1000226` / `password123`
-- **Milion Sime**: `instructor_milion` / `password123`
-
-### Students
-- **Miese Haji**: `UGR/50001/26` / `password123`
-
 ## 📁 Project Structure
 
 ```
